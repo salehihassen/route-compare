@@ -51,6 +51,7 @@ def compute_routes(
         "routingPreference": "TRAFFIC_AWARE_OPTIMAL",
         "trafficModel": "PESSIMISTIC",
         "polylineQuality": "OVERVIEW",
+        "units": "IMPERIAL",
     }
 
     # Add time constraint (must be in RFC 3339 format)
@@ -115,7 +116,7 @@ def format_duration(seconds: float) -> str:
 
     return " ".join(parts)
 
-def format_route_output(result: dict) -> str:
+def format_route_output(result: dict, DIRECTIONS_SHOWN_COUNT: int = 3) -> str:
     """Format route results as human-readable text for Routes API v2."""
 
     if "error" in result:
@@ -137,9 +138,9 @@ def format_route_output(result: dict) -> str:
         output.append(f"Route {i}:")
 
         # Distance
-        distance_m = route.get("distanceMeters", 0)
-        distance_km = distance_m / 1000
-        output.append(f"  Distance: {distance_km:.1f} km ({distance_m}m)")
+        localized = route.get("localizedValues", {})
+        distance_text = localized.get("distance", {}).get("text", "")
+        output.append(f"  Distance: {distance_text}")
 
         # Duration (PESSIMISTIC worst-case)
         duration_str = route["duration"] # in seconds
@@ -172,15 +173,15 @@ def format_route_output(result: dict) -> str:
             # Steps (turn-by-turn directions) - first 3 only
             steps = leg.get("steps", [])
             if steps:
-                output.append(f"    Directions (first 3 steps):")
-                for step_idx, step in enumerate(steps[:3], 1):
+                output.append(f"    Directions (first {DIRECTIONS_SHOWN_COUNT} steps):")
+                for step_idx, step in enumerate(steps[:DIRECTIONS_SHOWN_COUNT], 1):
                     nav = step.get("navigationInstruction", {})
                     instruction = nav.get("instructions", "")
                     maneuver = nav.get("maneuver", "STRAIGHT")
                     if instruction:
                         output.append(f"      {step_idx}. {maneuver}: {instruction[:60]}")
                 if len(steps) > 3:
-                    output.append(f"      ... and {len(steps) - 3} more steps")
+                    output.append(f"      ... and {len(steps) - DIRECTIONS_SHOWN_COUNT} more steps")
 
         output.append("")
 
