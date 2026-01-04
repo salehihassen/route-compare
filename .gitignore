@@ -1,0 +1,11 @@
+
+.venv
+.ropeproject
+
+# environment keys
+.env
+
+# convenience script to see route info directly over cli w/ sensitive info
+local.sh
+
+archive/
