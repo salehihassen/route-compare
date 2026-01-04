@@ -9,12 +9,25 @@ Usage:
 
 import json
 import argparse
-from datetime import datetime, timedelta
+import datetime as dt 
 from zoneinfo import ZoneInfo
 from typing import Optional
 import requests
 from dotenv import load_dotenv
 import os
+import logging
+import sys
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        # logging.FileHandler('api_debug.log')
+    ]
+)
+logger = logging.getLogger(__name__)
+
 
 load_dotenv(".env")
 API_KEY = os.getenv("GMAPS_API_KEY")
@@ -39,8 +52,9 @@ def compute_routes(
         time_field = "departureTime"
         time_value = departure_time
     else:
-        time_field = "departureTime"
-        time_value = datetime.utcnow().isoformat() + "Z"
+        time_field = None
+        time_value = None
+    logger.debug(f"route req time=> {time_field}: {time_value}")
 
     # Build the Routes API v2 request body
     request_body = {
@@ -90,11 +104,11 @@ def compute_routes(
     except json.JSONDecodeError as e:
         return {"error": f"Invalid JSON response: {str(e)}"}
 
-def calculate_departure_time(arrival_time_iso: str, duration_seconds: int,
+def calculate_departure_time(arrival_time_iso: str, duration_seconds: float,
     timezone= "America/New_York") -> str:
     """Calculate the departure time given arrival time and duration."""
-    arrival = datetime.fromisoformat(arrival_time_iso.replace('Z', '+00:00'))
-    departure_utc = arrival - timedelta(seconds=duration_seconds)
+    arrival = dt.datetime.fromisoformat(arrival_time_iso.replace('Z', '+00:00'))
+    departure_utc = arrival - dt.timedelta(seconds=duration_seconds)
     departure_local = departure_utc.astimezone(ZoneInfo(timezone))
 
     return departure_local.strftime("%I:%M %p").lstrip("0")
