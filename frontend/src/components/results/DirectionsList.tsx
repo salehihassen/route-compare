@@ -49,7 +49,9 @@ export function DirectionsList({ route }: DirectionsListProps) {
                         }} 
                       />
                       <div className="text-muted-foreground text-xs mt-1">
-                        {step.staticDuration} • {step.distanceMeters}m
+                        {step.localizedValues?.staticDuration.text 
+                          ? (step.localizedValues.staticDuration.text) 
+                          : (step.staticDuration)} • {step.localizedValues?.distance?.text ?? `${step.distanceMeters}m`}
                       </div>
                     </div>
                   </div>

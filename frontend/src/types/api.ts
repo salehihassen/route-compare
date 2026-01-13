@@ -72,6 +72,10 @@ export interface Step {
     maneuver: string;
     instructions: string;
   };
+  localizedValues?: {
+    distance: { text: string };
+    staticDuration: { text: string };
+  };
 }
 
 export interface Location {
