@@ -1,11 +1,4 @@
-
-.venv
-.ropeproject
-
-# environment keys
-.env
-
-# convenience script to see route info directly over cli w/ sensitive info
-local.sh
-
-archive/
+frontend/node_modules
+frontend/.env
+backend/.env
+backend/.venv
