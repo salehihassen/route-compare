@@ -1,6 +1,6 @@
 import { GoogleMap, useJsApiLoader, Polyline, Marker } from '@react-google-maps/api';
 import { Route } from '../../types/api';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Skeleton } from '../ui/skeleton';
 
 interface RouteMapProps {
@@ -21,13 +21,20 @@ export function RouteMap({ route }: RouteMapProps) {
   });
 
   const [path, setPath] = useState<google.maps.LatLng[]>([]);
+  // TODO set ref for google maps polyline and use useEffect to clear and redraw, add onLoad callback to the polyline component
+  const polylineRef = useRef<google.maps.Polyline | null>(null);
 
   useEffect(() => {
-    if (isLoaded && route.polyline?.encodedPolyline && window.google) {
-      const decodedPath = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
-      setPath(decodedPath);
-    }
-  }, [isLoaded, route]);
+  if (!isLoaded || !route.polyline?.encodedPolyline || !window.google) return;
+  // Clear the previous polyline if it exists
+  if (polylineRef.current) {
+    polylineRef.current.setMap(null);
+  }
+  // Decode the new path
+  const decodedPath = google.maps.geometry.encoding.decodePath(route.polyline.encodedPolyline);
+  setPath(decodedPath);
+  // The Polyline component will create the new instance and store it in the ref
+}, [isLoaded, route]);
 
   const center = useMemo(() => {
     if (path.length === 0) return { lat: 0, lng: 0 };
@@ -54,6 +61,9 @@ export function RouteMap({ route }: RouteMapProps) {
       {path.length > 0 && (
         <Polyline
           path={path}
+          onLoad={(polyline) => {
+            polylineRef.current = polyline;
+          }}
           options={{
             strokeColor: "#2563eb",
             strokeOpacity: 1.0,
